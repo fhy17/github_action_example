@@ -1,0 +1,43 @@
+name: Check Branch on Tag Push
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v*'  # 匹配以 'v' 开头的标签
+
+jobs:
+  check_tag_push:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Determine Ref Type
+      id: determine_ref_type
+      run: |
+        ref="${{ github.ref }}"
+        if [[ "$ref" =~ ^refs/heads/(.*)$ ]]; then
+          echo "::set-output name=ref_type::branch"
+          echo "::set-output name=branch_name::${BASH_REMATCH[1]}"
+        elif [[ "$ref" =~ ^refs/tags/v.*$ ]]; then
+          echo "::set-output name=ref_type::tag"
+          echo "::set-output name=tag_name::${ref#refs/tags/}"
+        else
+          echo "::set-output name=ref_type::unknown"
+        fi
+
+    - name: Output Branch or Tag
+      run: |
+        ref_type=${{ steps.determine_ref_type.outputs.ref_type }}
+        if [[ "$ref_type" == "branch" ]]; then
+          branch_name=${{ steps.determine_ref_type.outputs.branch_name }}
+          echo "Pushed to branch: $branch_name"
+        elif [[ "$ref_type" == "tag" ]]; then
+          tag_name=${{ steps.determine_ref_type.outputs.tag_name }}
+          echo "Tag pushed: $tag_name"
+        else
+          echo "Unknown push."
+        fi

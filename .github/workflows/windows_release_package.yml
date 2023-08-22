@@ -1,0 +1,91 @@
+name: windows_release_package
+
+on:
+  push:
+    branches:
+      - release  # 触发推送到 main 分支的事件，可以根据实际情况修改
+    # tags:
+    #   - 'v*'  # 匹配以 'v' 开头的标签
+
+jobs:
+  build_and_package:
+    name: Build And Package
+    runs-on: windows-latest  # 使用 Windows 作为构建环境
+
+    env:
+      targetName: test
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2  # 检出仓库代码
+
+    - name: Create Build Directory
+      run: mkdir build  # 创建 build 目录
+
+    - name: Configure CMake
+      # 进入 build 目录并执行 CMake 配置
+      run: |
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_GENERATOR_PLATFORM=x64 ..
+
+    - name: Build
+      run: cmake --build build --config Release  --target ALL_BUILD # 使用构建系统编译项目
+
+    # - name: Run Tests (if applicable)
+    #   run: cd build && ctest  # 运行测试（如果你的项目有测试）
+
+    - name: Read Project Name and Version
+      id: read_info
+      run: |
+        $cmakeLists = Get-Content -Path "CMakeLists.txt" -Raw
+        if ($cmakeLists -match 'project \("(.+)"') {
+          $projectName = $matches[1]
+          Write-Host "::set-output name=project_name::$projectName"
+        }
+        
+        if ($cmakeLists -match 'VERSION (\d+\.\d+\.\d+\.\d+)') {
+          $version = $matches[1]
+          Write-Host "::set-output name=version::$version"
+        }
+
+    - name: Output Project Name And Version
+      run: |
+        echo "Project name: ${{ steps.read_info.outputs.project_name }}"
+        echo "Project version: ${{ steps.read_info.outputs.version }}"
+
+    - name: Compress Directory
+      run: |
+        mkdir compressed
+        Compress-Archive -Path ./bin/release -DestinationPath ./compressed/${{ steps.read_info.outputs.project_name }}.zip
+      shell: powershell
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        # tag_name: ${{ github.ref }}
+        # release_name: Release ${{ github.ref }}
+        tag_name: ${{ steps.read_info.outputs.version }}
+        release_name: Release ${{ steps.read_info.outputs.version }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: my-artifact
+        path: compressed/${{ steps.read_info.outputs.project_name }}.zip
+
+    - name: Attach Artifact to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: compressed/${{ steps.read_info.outputs.project_name }}.zip
+        asset_name: ${{ steps.read_info.outputs.project_name }}.zip
+        asset_content_type: application/zip
+        # tag: ${{ github.ref }}
+        tag: ${{ steps.read_info.outputs.version }}

@@ -1,0 +1,65 @@
+# name: get version
+
+# on:
+#   push
+
+# jobs:
+#   read_project_version:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v2
+
+#     - name: Read Project Version
+#       id: read_version
+#       run: |
+#         version=$(grep -o 'VERSION [0-9]\+\.[0-9]\+\.[0-9]\+' CMakeLists.txt | awk '{print $2}')
+#         version_with_v="v$version"
+#         echo "::set-output name=project_version::$version_with_v"
+
+#     - name: Output Project Version
+#       run: |
+#         echo "Project version: ${{ steps.read_version.outputs.project_version }}"
+
+#     - name: Read Project Name
+#       id: read_project_name
+#       run: |
+#         project_name=$(grep -o 'project\s*(".*"' CMakeLists.txt | sed 's/project\s*("\([^"]*\)".*/\1/')
+#         echo "project_name $project_name"
+#         echo "::set-output name=project_name::$project_name"
+
+#     - name: Output Project Name
+#       run: |
+#         echo "Project name: ${{ steps.read_project_name.outputs.project_name }}"
+
+name: Read Project Name and Version from CMakeLists
+
+on: push
+
+jobs:
+  read_cmake_lists:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Read Project Name and Version
+      id: read_info
+      run: |
+        $cmakeLists = Get-Content -Path "CMakeLists.txt" -Raw
+        if ($cmakeLists -match 'project \("(.+)"') {
+          $projectName = $matches[1]
+          Write-Host "::set-output name=project_name::$projectName"
+        }
+        
+        if ($cmakeLists -match 'VERSION (\d+\.\d+\.\d+\.\d+)') {
+          $version = $matches[1]
+          Write-Host "::set-output name=version::$version"
+        }
+
+    - name: Output Project Name and Version
+      run: |
+        echo "Project name: ${{ steps.read_info.outputs.project_name }}"
+        echo "Version: ${{ steps.read_info.outputs.version }}"
