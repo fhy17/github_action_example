@@ -4,7 +4,7 @@ project ("regex_test")
 
 include_directories(
 	# ${CMAKE_SOURCE_DIR}/inc
-	${CMAKE_SOURCE_DIR}/external_dependencies/googletest/include
+	${CMAKE_SOURCE_DIR}/../extern/googletest/include
 	${CMAKE_CURRENT_SOURCE_DIR}/../include
 )
 

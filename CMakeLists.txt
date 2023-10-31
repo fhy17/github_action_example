@@ -99,7 +99,7 @@ elseif(${CMAKE_BUILD_TYPE} MATCHES "Release")
 endif()
 
 # set google test libraries path
-set(GOOGLE_TEST_LIB_PATH ${CMAKE_SOURCE_DIR}/external_dependencies/googletest/lib/${CURRENT_PLATFORM}/${BUILD_TYPE})
+set(GOOGLE_TEST_LIB_PATH ${CMAKE_SOURCE_DIR}/../extern/googletest/lib/${CURRENT_PLATFORM}/${BUILD_TYPE})
 message(STATUS "GOOGLE_TEST_LIB_PATH: " ${GOOGLE_TEST_LIB_PATH})
 
 
@@ -111,8 +111,6 @@ project ("test" VERSION 1.0.0.0)
 add_subdirectory("regex")
 
 
-# add_subdirectory("external_dependencies")
-
 #=============Copy Source files to Build Runtime Dir=============== 
 #该内容一般放在项目顶层CMakelists.txt的最后
 #目的是将项目生成后的执行文件所需的第三方库复制到执行程序目录
@@ -120,7 +118,7 @@ add_subdirectory("regex")
 #该方法中的COMMAND_EXPAND_LISTS参数值得关注，可以复制列表内所有文件
 # set(PROJECT_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
 # FILE(GLOB Glog_DLL CONFIGURE_DEPENDS 
-#     ${CMAKE_SOURCE_DIR}/external_dependencies/glog/bin/*.dll
+#     ${CMAKE_SOURCE_DIR}/../extern/glog/bin/*.dll
 # ) 
    
 # add_custom_target(target ALL

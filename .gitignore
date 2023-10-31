@@ -54,3 +54,7 @@ version_info.rc
 # 
 # Debug
 # Release
+
+bin
+
+lib
